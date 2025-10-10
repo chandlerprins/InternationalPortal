@@ -133,30 +133,7 @@ const Register = () => {
         }
     };
 
-    const getPasswordStrength = () => {
-        const password = formData.password;
-        if (!password) return { strength: 0, label: '', color: '' };
 
-        let score = 0;
-        if (password.length >= 12) score++;
-        if (/[A-Z]/.test(password)) score++;
-        if (/[a-z]/.test(password)) score++;
-        if (/\d/.test(password)) score++;
-        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
-
-        const levels = [
-            { strength: 0, label: 'Very Weak', color: '#ef4444' },
-           { strength: 1, label: 'Weak', color: '#f59e0b' },
-            { strength: 2, label: 'Fair', color: '#f59e0b' },
-           { strength: 3, label: 'Good', color: '#3b82f6' },
-            { strength: 4, label: 'Strong', color: '#10b981' },
-            { strength: 5, label: 'Very Strong', color: '#10b981' }
-        ];
-
-        return levels[score];
-    };
-
-    const passwordStrength = getPasswordStrength();
 
     return (
         <div className="register-page">
@@ -254,44 +231,15 @@ const Register = () => {
                                     {showPassword ? '👁️' : '👁️‍🗨️'}
                                 </button>
                             </div>
-                            {formData.password && (
-                                <div className="password-strength">
-                                    <div className="strength-bar">
-                                        <div 
-                                            className="strength-fill"
-                                            style={{ 
-                                                width: `${(passwordStrength.strength / 5) * 100}%`,
-                                                backgroundColor: passwordStrength.color
-                                            }}
-                                        ></div>
-                                    </div>
-                                    <span 
-                                        className="strength-label"
-                                        style={{ color: passwordStrength.color }}
-                                    >
-                                        {passwordStrength.label}
-                                    </span>
-                                </div>
-                            )}
                             {errors.password && <span className="error-text">{errors.password}</span>}
                             <div className="password-requirements">
                                 <small>Password must contain:</small>
                                 <ul>
-                                    <li className={formData.password.length >= 12 ? 'valid' : ''}>
-                                        At least 12 characters
-                                    </li>
-                                    <li className={/[A-Z]/.test(formData.password) ? 'valid' : ''}>
-                                        Uppercase letters (A-Z)
-                                    </li>
-                                    <li className={/[a-z]/.test(formData.password) ? 'valid' : ''}>
-                                        Lowercase letters (a-z)
-                                    </li>
-                                    <li className={/\d/.test(formData.password) ? 'valid' : ''}>
-                                        Numbers (0-9)
-                                    </li>
-                                    <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'valid' : ''}>
-                                        Special characters (!@#$%^&*)
-                                    </li>
+                                    <li>At least 12 characters</li>
+                                    <li>Uppercase letters (A-Z)</li>
+                                    <li>Lowercase letters (a-z)</li>
+                                    <li>Numbers (0-9)</li>
+                                    <li>Special characters (!@#$%^&*)</li>
                                 </ul>
                             </div>
                         </div>
@@ -446,32 +394,6 @@ const Register = () => {
                     color: var(--primary-color);
                 }
 
-                .password-strength {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    margin-top: 0.5rem;
-                }
-
-                .strength-bar {
-                    flex: 1;
-                    height: 4px;
-                    background: #e5e7eb;
-                    border-radius: 2px;
-                    overflow: hidden;
-                }
-
-                .strength-fill {
-                    height: 100%;
-                    transition: all 0.3s ease;
-                }
-
-                .strength-label {
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    min-width: 80px;
-                }
-
                 .password-requirements {
                     margin-top: 0.75rem;
                     padding: 1rem;
@@ -502,20 +424,11 @@ const Register = () => {
                 }
 
                 .password-requirements li::before {
-                    content: '✗';
+                    content: '•';
                     position: absolute;
                     left: 0;
-                    color: var(--error-color);
+                    color: var(--primary-color);
                     font-weight: bold;
-                }
-
-                .password-requirements li.valid {
-                    color: var(--success-color);
-                }
-
-                .password-requirements li.valid::before {
-                    content: '✓';
-                    color: var(--success-color);
                 }
 
                 .form-help {
