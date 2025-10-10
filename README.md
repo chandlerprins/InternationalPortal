@@ -317,7 +317,6 @@ npm run test
 - Verify SSL configuration
 
 ### Getting Help
-- Check the [Issues](https://github.com/chandlerprins/InternationalPortal/issues) page
 - Review security documentation
 - Contact the development team
 
@@ -330,3 +329,5 @@ npm run test
 ---
 
 **📧 Contact**: For security issues, please contact the security team directly(Dhruv, Mud-dath-thir, Chandler).
+
+**YouTube Link**: https://youtu.be/w_qrp7pYbeo
