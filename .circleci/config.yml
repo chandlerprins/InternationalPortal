@@ -3,44 +3,33 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/node:18.19.0  # CircleCI Node.js image
+      # Use the SonarCloud scanner image directly
+      - image: sonarsource/sonar-scanner-cli:latest
     working_directory: ~/repo
     steps:
       - checkout
-
-      # Cache npm dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "backend/package-lock.json" }}
-            - v1-dependencies-
 
       # Install backend dependencies
       - run:
           name: Install backend dependencies
           command: |
             cd backend
-            npm ci
+            npm ci || npm install
 
       # Install frontend dependencies
       - run:
           name: Install frontend dependencies
           command: |
             cd frontend
-            npm ci
+            npm ci || npm install
 
-      - save_cache:
-          paths:
-            - backend/node_modules
-            - frontend/node_modules
-          key: v1-dependencies-{{ checksum "backend/package-lock.json" }}
-
-      # Lint and audit
+      # Run lint & security checks
       - run:
-          name: Lint & Security Audit
+          name: Lint & Audit
           command: |
             cd backend
             npx eslint . || echo "Lint warnings only"
-            npm audit --audit-level=high || echo "Audit complete"
+            npm audit --audit-level=high || echo "Security audit completed"
 
       # Run tests (optional)
       - run:
@@ -49,16 +38,12 @@ jobs:
             cd backend
             npm test || echo "No tests defined"
 
-      # Run SonarCloud scan using Docker
+      # SonarCloud scan (direct)
       - run:
-          name: SonarCloud scan (Docker fallback)
+          name: SonarCloud scan
           command: |
-            docker run \
-              -e SONAR_TOKEN=${SONAR_TOKEN} \
-              -e SONAR_ORG=${SONAR_ORG} \
-              -e SONAR_PROJECT_KEY=${SONAR_PROJECT_KEY} \
-              -v $(pwd)/backend:/usr/src \
-              sonarsource/sonar-scanner-cli:latest \
+            cd backend
+            sonar-scanner \
               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
               -Dsonar.organization=${SONAR_ORG} \
               -Dsonar.sources=./src \
