@@ -43,6 +43,7 @@ jobs:
           command: |
             cd backend
             npm install sonar-scanner
+            chmod +x ./node_modules/sonar-scanner/bin/sonar-scanner
             npx sonar-scanner \
               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
               -Dsonar.organization=${SONAR_ORG} \
