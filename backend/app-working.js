@@ -76,12 +76,14 @@ const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const securityRoutes = require('./routes/securityRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 app.use('/v1/test', testRoutes);
 app.use('/v1/auth', authLimiter, authRoutes);  // Rate limited auth
 app.use('/v1/payments', paymentLimiter, paymentRoutes);  // Rate limited payments
 app.use('/v1/profile', profileRoutes);  // Profile management
 app.use('/v1/security', securityRoutes);  // Security management
+app.use('/v1/employee', employeeRoutes);  // Employee routes
 
 console.log(' All secure routes loaded successfully');
 

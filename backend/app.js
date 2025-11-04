@@ -140,9 +140,11 @@ app.get('/health', (req, res) => {
 // Routes with specific rate limiting
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 app.use('/v1/auth', authLimiter, authRoutes);
 app.use('/v1/payments', paymentLimiter, paymentRoutes);
+app.use('/v1/employee', generalLimiter, employeeRoutes); // Employee routes with general rate limiting
 
 // Keep test routes for compatibility
 const testRoutes = require('./routes/testRoutes');
@@ -156,11 +158,11 @@ app.use('*', (req, res) => {
     });
 });
 
-// Global error handler (security - don't expose internal errors)
+// Global error handler 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     
-    // Security: Don't expose internal error details in production
+    // Security
     const isProduction = process.env.NODE_ENV === 'production';
     
     res.status(err.status || 500).json({
@@ -176,7 +178,7 @@ app.use((err, req, res, next) => {
         
         const port = process.env.API_PORT || 3443;
         
-        // For development, use HTTP. For production, use HTTPS
+       
         if (process.env.NODE_ENV === 'production') {
             const fs = require('fs');
             const https = require('https');

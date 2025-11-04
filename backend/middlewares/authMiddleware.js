@@ -156,11 +156,37 @@ const terminateSession = (res) => {
     });
 };
 
-module.exports = { 
-    verifyAccessToken, 
+/**
+ * Role-based access control middleware
+ */
+const verifyRole = (allowedRoles) => {
+    return (req, res, next) => {
+        if (!req.user || !req.user.role) {
+            console.warn(`[SECURITY] Role verification failed - No user role found`);
+            return res.status(403).json({
+                message: 'Access denied - Insufficient permissions',
+                action: 'redirect_to_login'
+            });
+        }
+
+        if (!allowedRoles.includes(req.user.role)) {
+            console.warn(`[SECURITY] Role verification failed - User role: ${req.user.role}, Required: ${allowedRoles.join(', ')}`);
+            return res.status(403).json({
+                message: 'Access denied - Insufficient permissions',
+                action: 'redirect_to_dashboard'
+            });
+        }
+
+        next();
+    };
+};
+
+module.exports = {
+    verifyAccessToken,
     verifyCsrfToken,
     validatePasswordStrength,
-    terminateSession
+    terminateSession,
+    verifyRole
 };
 
 

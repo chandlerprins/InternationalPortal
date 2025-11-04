@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     accountNumber: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
+    role: { type: String, enum: ['customer', 'employee', 'admin'], default: 'customer' },
     is2FAEnabled: { type: Boolean, default: false },
     twoFASecret: { type: String }, // base32 secret
     createdAt: { type: Date, default: Date.now }
@@ -17,6 +18,7 @@ userSchema.methods.toSafeJSON = function () {
         fullName: this.fullName,
         email: this.email,
         accountNumber: this.accountNumber,
+        role: this.role,
         is2FAEnabled: this.is2FAEnabled,
         createdAt: this.createdAt
     };

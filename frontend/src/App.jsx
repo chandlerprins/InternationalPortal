@@ -7,6 +7,11 @@ import Dashboard from './pages/Dashboard.jsx';
 import Payments from './pages/Payments.jsx';
 import History from './pages/History.jsx';
 import Security from './pages/Security.jsx';
+import EmployeeLogin from './pages/EmployeeLogin.jsx';
+import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
+import PaymentManagement from './pages/PaymentManagement.jsx';
+import AdminLogin from './pages/AdminLogin.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Navbar from './components/Navbar.jsx';
 import './App.css';
@@ -60,6 +65,27 @@ function AppContent() {
             <Route path="/security" element={
               <ProtectedRoute>
                 <Security />
+              </ProtectedRoute>
+            } />
+
+            {/* Employee Routes */}
+            <Route path="/employee/login" element={<EmployeeLogin />} />
+            <Route path="/employee/dashboard" element={
+              <ProtectedRoute requiredRole="employee">
+                <EmployeeDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/employee/payments" element={
+              <ProtectedRoute requiredRole="employee">
+                <PaymentManagement />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
               </ProtectedRoute>
             } />
           </Routes>

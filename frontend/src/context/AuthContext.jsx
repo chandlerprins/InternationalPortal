@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
     const [csrfToken, setCsrfToken] = useState(null);
     const [requires2FA, setRequires2FA] = useState(false);
     const [tempToken, setTempToken] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     // Check authentication status on app load
     useEffect(() => {
@@ -22,15 +23,17 @@ export function AuthProvider({ children }) {
         try {
             const response = await apiService.get('/auth/security-status');
             console.log('[AuthContext] Auth check response:', response);
-            
+
             if (response.success && response.data.authenticated) {
                 console.log('[AuthContext] User authenticated:', response.data.user);
                 setIsAuthenticated(true);
                 setUser({ uid: response.data.user });
+                setUserRole(response.data.role || 'customer');
             } else {
                 console.log('[AuthContext] User not authenticated');
                 setIsAuthenticated(false);
                 setUser(null);
+                setUserRole(null);
             }
         } catch (error) {
             // User not authenticated or API not available, which is fine
@@ -38,6 +41,7 @@ export function AuthProvider({ children }) {
             console.log('[AuthContext] Full error:', error);
             setIsAuthenticated(false);
             setUser(null);
+            setUserRole(null);
         } finally {
             console.log('[AuthContext] Setting loading to false');
             setLoading(false);
@@ -71,6 +75,7 @@ export function AuthProvider({ children }) {
             console.log('[AuthContext] Setting authenticated state...');
             setIsAuthenticated(true);
             setUser(data.user);
+            setUserRole(data.user.role || 'customer'); // Default to customer if no role
             setCsrfToken(data.csrfToken);
             setRequires2FA(false);
             setTempToken(null);
@@ -109,6 +114,7 @@ export function AuthProvider({ children }) {
             const data = response.data;
             setIsAuthenticated(true);
             setUser(data.user);
+            setUserRole(data.user.role || 'customer');
             setCsrfToken(data.csrfToken);
             setRequires2FA(false);
             setTempToken(null);
@@ -145,6 +151,7 @@ export function AuthProvider({ children }) {
         } finally {
             setIsAuthenticated(false);
             setUser(null);
+            setUserRole(null);
             setCsrfToken(null);
             setRequires2FA(false);
             setTempToken(null);
@@ -182,6 +189,7 @@ export function AuthProvider({ children }) {
     const value = {
         isAuthenticated,
         user,
+        userRole,
         loading,
         csrfToken,
         requires2FA,

@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
     currency: { type: String, required: true },
     amount: { type: Number, required: true, min: 0.01 },
     reference: { type: String, maxlength: 140 },
-    status: { type: String, enum: ['pending','verified','sent'], default: 'pending' },
+    status: { type: String, enum: ['pending','verified','sent','denied'], default: 'pending' },
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { isAuthenticated, user, logout } = useAuth();
+    const { isAuthenticated, user, userRole, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -22,58 +22,98 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="navbar-container">
                 {/* Logo */}
-                <Link to="/" className="navbar-logo" onClick={() => setIsOpen(false)}>
+                <div className="navbar-logo">
                     <span className="logo-text">International Payments</span>
-                </Link>
+                </div>
 
                 {/* Desktop Menu */}
                 <div className="navbar-menu">
                     {isAuthenticated ? (
                         <>
-                            <Link 
-                                to="/dashboard" 
-                                className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
-                            >
-                                Dashboard
-                            </Link>
-                            <Link 
-                                to="/payments" 
-                                className={`nav-link ${isActive('/payments') ? 'active' : ''}`}
-                            >
-                                Send Payment
-                            </Link>
-                            <Link 
-                                to="/history" 
-                                className={`nav-link ${isActive('/history') ? 'active' : ''}`}
-                            >
-                                Transaction History
-                            </Link>
-                            <Link 
-                                to="/security" 
-                                className={`nav-link ${isActive('/security') ? 'active' : ''}`}
-                            >
-                                Security
-                            </Link>
+                            {userRole === 'employee' ? (
+                                <>
+                                    <Link
+                                        to="/employee/dashboard"
+                                        className={`nav-link ${isActive('/employee/dashboard') ? 'active' : ''}`}
+                                    >
+                                        Employee Dashboard
+                                    </Link>
+                                    <Link
+                                        to="/employee/payments"
+                                        className={`nav-link ${isActive('/employee/payments') ? 'active' : ''}`}
+                                    >
+                                        Payment Management
+                                    </Link>
+                                </>
+                            ) : userRole === 'admin' ? (
+                                <>
+                                    <Link
+                                        to="/admin/dashboard"
+                                        className={`nav-link ${isActive('/admin/dashboard') ? 'active' : ''}`}
+                                    >
+                                        Admin Dashboard
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        to="/dashboard"
+                                        className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <Link
+                                        to="/payments"
+                                        className={`nav-link ${isActive('/payments') ? 'active' : ''}`}
+                                    >
+                                        Send Payment
+                                    </Link>
+                                    <Link
+                                        to="/history"
+                                        className={`nav-link ${isActive('/history') ? 'active' : ''}`}
+                                    >
+                                        Transaction History
+                                    </Link>
+                                    <Link
+                                        to="/security"
+                                        className={`nav-link ${isActive('/security') ? 'active' : ''}`}
+                                    >
+                                        Security
+                                    </Link>
+                                </>
+                            )}
                             <button onClick={handleLogout} className="nav-link logout-btn">
                                 Logout
                             </button>
                         </>
                     ) : (
                         <>
-                            <Link 
-                                to="/" 
+                            <Link
+                                to="/"
                                 className={`nav-link ${isActive('/') ? 'active' : ''}`}
                             >
                                 Home
                             </Link>
-                            <Link 
-                                to="/login" 
+                            <Link
+                                to="/login"
                                 className={`nav-link ${isActive('/login') ? 'active' : ''}`}
                             >
-                                Login
+                                Customer Login
                             </Link>
-                            <Link 
-                                to="/register" 
+                            <Link
+                                to="/employee/login"
+                                className={`nav-link ${isActive('/employee/login') ? 'active' : ''}`}
+                            >
+                                Employee Login
+                            </Link>
+                            <Link
+                                to="/admin/login"
+                                className={`nav-link ${isActive('/admin/login') ? 'active' : ''}`}
+                            >
+                                Admin Login
+                            </Link>
+                            <Link
+                                to="/register"
                                 className="nav-link btn btn-primary"
                             >
                                 Register
@@ -97,56 +137,101 @@ const Navbar = () => {
                                 <div className="mobile-user-info">
                                     <span>Welcome, {user?.fullName || 'User'}</span>
                                 </div>
-                                <Link 
-                                    to="/dashboard" 
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Dashboard
-                                </Link>
-                                <Link 
-                                    to="/payments" 
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Send Payment
-                                </Link>
-                                <Link 
-                                    to="/history" 
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Transaction History
-                                </Link>
-                                <Link 
-                                    to="/security" 
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Security
-                                </Link>
+                                {userRole === 'employee' ? (
+                                    <>
+                                        <Link
+                                            to="/employee/dashboard"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Employee Dashboard
+                                        </Link>
+                                        <Link
+                                            to="/employee/payments"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Payment Management
+                                        </Link>
+                                    </>
+                                ) : userRole === 'admin' ? (
+                                    <>
+                                        <Link
+                                            to="/admin/dashboard"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Admin Dashboard
+                                        </Link>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link
+                                            to="/dashboard"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Dashboard
+                                        </Link>
+                                        <Link
+                                            to="/payments"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Send Payment
+                                        </Link>
+                                        <Link
+                                            to="/history"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Transaction History
+                                        </Link>
+                                        <Link
+                                            to="/security"
+                                            className="mobile-nav-link"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Security
+                                        </Link>
+                                    </>
+                                )}
                                 <button onClick={handleLogout} className="mobile-nav-link logout-btn">
                                     Logout
                                 </button>
                             </>
                         ) : (
                             <>
-                                <Link 
-                                    to="/" 
+                                <Link
+                                    to="/"
                                     className="mobile-nav-link"
                                     onClick={() => setIsOpen(false)}
                                 >
                                     Home
                                 </Link>
-                                <Link 
-                                    to="/login" 
+                                <Link
+                                    to="/login"
                                     className="mobile-nav-link"
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    Login
+                                    Customer Login
                                 </Link>
-                                <Link 
-                                    to="/register" 
+                                <Link
+                                    to="/employee/login"
+                                    className="mobile-nav-link"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Employee Login
+                                </Link>
+                                <Link
+                                    to="/admin/login"
+                                    className="mobile-nav-link"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Admin Login
+                                </Link>
+                                <Link
+                                    to="/register"
                                     className="mobile-nav-link btn btn-primary"
                                     onClick={() => setIsOpen(false)}
                                 >

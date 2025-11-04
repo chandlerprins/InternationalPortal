@@ -21,6 +21,7 @@ router.get('/security-status', verifyAccessToken, (req, res) => {
     res.json({
         authenticated: true,
         user: req.user.uid,
+        role: req.user.role,
         timestamp: new Date().toISOString(),
         securityFeatures: {
             csrf: 'enabled',

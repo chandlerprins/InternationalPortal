@@ -169,7 +169,7 @@ const login = async (req, res) => {
         }
         
         // Generate secure session tokens
-        const tokenData = { uid: user._id, accountNumber: user.accountNumber };
+        const tokenData = { uid: user._id, accountNumber: user.accountNumber, role: user.role };
         const accessToken = jwt.sign(tokenData, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
         const refreshToken = jwt.sign(tokenData, config.refreshSecret, { expiresIn: config.refreshExpiresIn });
         
@@ -258,7 +258,7 @@ const verify2FA = async (req, res) => {
         }
         
         // Successful 2FA - issue full session tokens
-        const tokenData = { uid: user._id, accountNumber: user.accountNumber };
+        const tokenData = { uid: user._id, accountNumber: user.accountNumber, role: user.role };
         const accessToken = jwt.sign(tokenData, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
         const refreshToken = jwt.sign(tokenData, config.refreshSecret, { expiresIn: config.refreshExpiresIn });
         

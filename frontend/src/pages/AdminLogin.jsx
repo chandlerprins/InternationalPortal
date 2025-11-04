@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const Login = () => {
+const AdminLogin = () => {
     const [formData, setFormData] = useState({
         accountNumber: '',
         password: ''
@@ -17,16 +17,16 @@ const Login = () => {
     const { login, verify2FA, skipTwoFA, requires2FA, isAuthenticated, userRole, checkAuthStatus } = useAuth();
     const navigate = useNavigate();
 
-    // Redirect if already authenticated
+    // Redirect if already authenticated as admin
     useEffect(() => {
-        if (isAuthenticated) {
-            if (userRole === 'employee') {
-                navigate('/employee/dashboard');
-            } else if (userRole === 'admin') {
-                navigate('/admin/dashboard');
-            } else {
-                navigate('/dashboard');
-            }
+        if (isAuthenticated && userRole === 'admin') {
+            navigate('/admin/dashboard');
+        } else if (isAuthenticated && userRole === 'customer') {
+            // If customer is logged in, redirect to customer dashboard
+            navigate('/dashboard');
+        } else if (isAuthenticated && userRole === 'employee') {
+            // If employee is logged in, redirect to employee dashboard
+            navigate('/employee/dashboard');
         }
     }, [isAuthenticated, userRole, navigate]);
 
@@ -36,7 +36,7 @@ const Login = () => {
             ...prev,
             [name]: value
         }));
-        
+
         // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => ({
@@ -50,9 +50,9 @@ const Login = () => {
         const newErrors = {};
 
         if (!formData.accountNumber.trim()) {
-            newErrors.accountNumber = 'Account number is required';
-        } else if (!/^\d{8,12}$/.test(formData.accountNumber.trim())) {
-            newErrors.accountNumber = 'Account number must be 8-12 digits';
+            newErrors.accountNumber = 'Admin ID is required';
+        } else if (!/^[A-Z]{3}\d{3}$|^[A-Z]{3}\d{4}$/.test(formData.accountNumber.trim())) {
+            newErrors.accountNumber = 'Admin ID must be in format ADM001 or ADM0001';
         }
 
         if (!formData.password) {
@@ -64,7 +64,7 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         const formErrors = validateForm();
         if (Object.keys(formErrors).length > 0) {
             setErrors(formErrors);
@@ -78,12 +78,11 @@ const Login = () => {
             const result = await login(formData.accountNumber.trim(), formData.password);
 
             if (result.success) {
-                if (userRole === 'employee') {
-                    navigate('/employee/dashboard');
-                } else if (userRole === 'admin') {
+                // Check if user has admin role
+                if (userRole === 'admin') {
                     navigate('/admin/dashboard');
                 } else {
-                    navigate('/dashboard');
+                    setMessage('Access denied. This login is for administrators only.');
                 }
             } else if (result.requires2FA) {
                 setShow2FA(true);
@@ -100,7 +99,7 @@ const Login = () => {
 
     const handle2FASubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!twoFACode.trim()) {
             setMessage('Please enter your 2FA code');
             return;
@@ -113,12 +112,10 @@ const Login = () => {
             const result = await verify2FA(twoFACode.trim());
 
             if (result.success) {
-                if (userRole === 'employee') {
-                    navigate('/employee/dashboard');
-                } else if (userRole === 'admin') {
+                if (userRole === 'admin') {
                     navigate('/admin/dashboard');
                 } else {
-                    navigate('/dashboard');
+                    setMessage('Access denied. This login is for administrators only.');
                 }
             } else {
                 setMessage(result.message);
@@ -137,9 +134,9 @@ const Login = () => {
                     <div className="login-container">
                         <div className="login-header">
                             <div className="login-icon">
-                            
+                                🛡️
                             </div>
-                            <h1 className="login-title">Email Verification</h1>
+                            <h1 className="login-title">Admin Verification</h1>
                             <p className="login-subtitle">
                                 We've sent a 6-digit code to your email address. Please enter it below.
                             </p>
@@ -172,8 +169,8 @@ const Login = () => {
                                 </small>
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="btn btn-primary btn-full"
                                 disabled={isLoading || twoFACode.length !== 6}
                             >
@@ -188,7 +185,7 @@ const Login = () => {
                             </button>
 
                             <div className="login-footer">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => {
                                         setShow2FA(false);
@@ -199,8 +196,8 @@ const Login = () => {
                                 >
                                     Back to Login
                                 </button>
-                                
-                                <button 
+
+                                <button
                                     type="button"
                                     onClick={async () => {
                                         setMessage('Skipping 2FA for testing...');
@@ -208,12 +205,10 @@ const Login = () => {
                                             const result = await skipTwoFA();
                                             if (result.success) {
                                                 setShow2FA(false);
-                                                if (userRole === 'employee') {
-                                                    navigate('/employee/dashboard');
-                                                } else if (userRole === 'admin') {
+                                                if (userRole === 'admin') {
                                                     navigate('/admin/dashboard');
                                                 } else {
-                                                    navigate('/dashboard');
+                                                    setMessage('Access denied. This login is for administrators only.');
                                                 }
                                             } else {
                                                 setMessage(result.message);
@@ -241,10 +236,12 @@ const Login = () => {
             <div className="container">
                 <div className="login-container">
                     <div className="login-header">
-                        
-                        <h1 className="login-title">Welcome Back</h1>
+                        <div className="login-icon">
+                            🛡️
+                        </div>
+                        <h1 className="login-title">Admin Portal</h1>
                         <p className="login-subtitle">
-                            Sign in to your secure international payments account
+                            Sign in to access the administrative management system
                         </p>
                     </div>
 
@@ -257,7 +254,7 @@ const Login = () => {
 
                         <div className="form-group">
                             <label htmlFor="accountNumber" className="form-label">
-                                Account Number
+                                Admin ID
                             </label>
                             <input
                                 type="text"
@@ -266,7 +263,7 @@ const Login = () => {
                                 value={formData.accountNumber}
                                 onChange={handleChange}
                                 className={`form-input ${errors.accountNumber ? 'error' : ''}`}
-                                placeholder="Enter your account number"
+                                placeholder="Enter your admin ID"
                                 maxLength={12}
                                 required
                             />
@@ -299,8 +296,8 @@ const Login = () => {
                             {errors.password && <span className="error-text">{errors.password}</span>}
                         </div>
 
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="btn btn-primary btn-full"
                             disabled={isLoading}
                         >
@@ -316,9 +313,13 @@ const Login = () => {
 
                         <div className="login-footer">
                             <p>
-                                Don't have an account?{' '}
-                                <Link to="/register" className="auth-link">
-                                    Create one here
+                                Not an admin?{' '}
+                                <Link to="/login" className="auth-link">
+                                    Customer Login
+                                </Link>{' '}
+                                |{' '}
+                                <Link to="/employee/login" className="auth-link">
+                                    Employee Login
                                 </Link>
                             </p>
                         </div>
@@ -326,10 +327,10 @@ const Login = () => {
 
                     <div className="security-notice">
                         <div>
-                            <h4>Secure Login</h4>
+                            <h4>Administrative Access</h4>
                             <p>
-                                Your connection is encrypted and protected. We never store your 
-                                login credentials in plain text.
+                                This portal is restricted to authorized administrators only.
+                                All access is monitored and logged for security purposes.
                             </p>
                         </div>
                     </div>
@@ -529,4 +530,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default AdminLogin;

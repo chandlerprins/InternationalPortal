@@ -1,9 +1,5 @@
 import axios from '../interfaces/axiosInstance.js';
 
-/**
- * Customer International Payments Portal API Service
- * Handles all API communications with the banking backend
- */
 
 class ApiService {
     // Generic request methods
@@ -149,6 +145,48 @@ class ApiService {
 
     async logoutDevice(deviceId) {
         return this.post(`/security/devices/${deviceId}/logout`);
+    }
+
+    // Employee endpoints
+    async getEmployeeStats() {
+        return this.get('/employee/stats');
+    }
+
+    async getEmployeePayments() {
+        return this.get('/employee/payments');
+    }
+
+    async getPendingPayments() {
+        return this.get('/employee/payments/pending');
+    }
+
+    async getPaymentHistory() {
+        return this.get('/employee/payments/history');
+    }
+
+    async verifyPayment(paymentId) {
+        return this.post(`/employee/payments/${paymentId}/verify`);
+    }
+
+    async sendPayment(paymentId) {
+        return this.post(`/employee/payments/${paymentId}/send`);
+    }
+
+    async denyPayment(paymentId) {
+        return this.post(`/employee/payments/${paymentId}/deny`);
+    }
+
+    // Admin endpoints
+    async getEmployees() {
+        return this.get('/employee/employees');
+    }
+
+    async createEmployee(employeeData) {
+        return this.post('/employee/employees', employeeData);
+    }
+
+    async deleteEmployee(employeeId) {
+        return this.delete(`/employee/employees/${employeeId}`);
     }
 
     // Health check endpoints
