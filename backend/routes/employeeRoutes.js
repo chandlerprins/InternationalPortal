@@ -52,7 +52,8 @@ router.get('/users/activity', employeeAuth, getUserActivity);
 router.get('/employees', adminAuth, getEmployees);
 
 // Create new employee (POST) - Admin only, Requires CSRF protection
-router.post('/employees', adminAuth.concat(verifyCsrfToken), createEmployee);
+const { employeeValidation, validate } = require('../middlewares/validators');
+router.post('/employees', adminAuth.concat(verifyCsrfToken), employeeValidation, validate, createEmployee);
 
 // Delete employee (DELETE) - Admin only, Requires CSRF protection
 router.delete('/employees/:employeeId', adminAuth.concat(verifyCsrfToken), deleteEmployee);

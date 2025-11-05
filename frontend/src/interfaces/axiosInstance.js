@@ -7,6 +7,8 @@ const axiosInstance = axios.create({
   },
   withCredentials: true, // Enable cookies for authentication
   timeout: 10000, // 10 second timeout for banking security
+  // HTTPS configuration for secure communication
+  httpsAgent: process.env.NODE_ENV === 'production' ? undefined : undefined, // Let browser handle HTTPS
 });
 
 // Request interceptor for adding CSRF tokens and logging
