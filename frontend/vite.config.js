@@ -17,8 +17,8 @@ export default defineConfig({
     proxy: {
       '/v1': {
         target: process.env.NODE_ENV === 'production'
-          ? 'https://localhost:3443'
-          : 'https://localhost:3443', // Backend with HTTPS
+          ? 'https://localhost:3447'
+          : 'http://localhost:3447', // Backend with HTTP in development
         changeOrigin: true,
         secure: false, // Allow self-signed certificates in development
         ws: true // WebSocket support if needed
