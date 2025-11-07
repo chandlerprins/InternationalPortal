@@ -9,123 +9,120 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const https = require('https');
-
 const { connectToMongo } = require('./services/dbService');
 
-
-const createRateLimiter = (windowMs, max, message) => rateLimit({
-  windowMs,
-  max,
-  message: { message },
-  standardHeaders: true,
-  legacyHeaders: false
-});
+const createRateLimiter = (windowMs, max, message) =>
+  rateLimit({
+    windowMs,
+    max,
+    message: { message },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
 const addSecurityHeaders = (req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
-    'Referrer-Policy': 'strict-origin-when-cross-origin'
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
   });
   res.removeHeader('X-Powered-By');
   next();
 };
 
-const logRequests = (req, res, next) => {
+const logRequests = (req, _res, next) => {
   const timestamp = new Date().toISOString();
-  const userAgent = req.get('User-Agent');
   const ip = req.ip || req.connection.remoteAddress;
-  console.log(`[${timestamp}] ${req.method} ${req.url} - IP: ${ip} - UA: ${userAgent?.substring(0, 50)}`);
+  const ua = req.get('User-Agent')?.slice(0, 50) || 'unknown';
+  console.log(`[${timestamp}] ${req.method} ${req.url} - IP: ${ip} - UA: ${ua}`);
   next();
 };
-
 
 const app = express();
 app.set('trust proxy', 1);
 
-
 app.use(morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms'));
-
-
 app.use(helmet());
-
-
-app.use(createRateLimiter(15 * 60 * 1000, 100, 'Too many requests from this IP, please try again later.'));
-
-
-app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || 'https://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
-  optionsSuccessStatus: 200
-}));
-
-
+app.use(
+  createRateLimiter(15 * 60 * 1000, 100, 'Too many requests from this IP, please try again later.')
+);
+app.use(
+  cors({
+    origin: process.env.FRONTEND_ORIGIN || 'https://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
+    optionsSuccessStatus: 200,
+  })
+);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
-
-
-app.use(mongoSanitize({
-  replaceWith: '_',
-  onSanitize: ({ req, key }) => console.warn(`Sanitized input detected: ${key} from IP: ${req.ip}`)
-}));
+app.use(
+  mongoSanitize({
+    replaceWith: '_',
+    onSanitize: ({ req, key }) =>
+      console.warn(`Sanitized input detected: ${key} from IP: ${req.ip}`),
+  })
+);
 app.use(xss());
-
 app.use(addSecurityHeaders);
 app.use(logRequests);
 
-
-app.get('/health', (req, res) => {
+app.get('/health', (req, res) =>
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
+    environment: process.env.NODE_ENV || 'development',
+  })
+);
 
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const testRoutes = require('./routes/testRoutes');
 
-app.use('/v1/auth', createRateLimiter(15 * 60 * 1000, 5, 'Too many authentication attempts. Please try again in 15 minutes.'), authRoutes);
-app.use('/v1/payments', createRateLimiter(10 * 60 * 1000, 10, 'Payment limit exceeded. Please wait before submitting more payments.'), paymentRoutes);
+app.use(
+  '/v1/auth',
+  createRateLimiter(15 * 60 * 1000, 5, 'Too many authentication attempts. Please try again later.'),
+  authRoutes
+);
+app.use(
+  '/v1/payments',
+  createRateLimiter(10 * 60 * 1000, 10, 'Payment limit exceeded. Please wait before submitting more payments.'),
+  paymentRoutes
+);
 app.use('/v1/test', testRoutes);
 
-
-app.use('*', (req, res) => {
-  res.status(404).json({ 
+app.use('*', (req, res) =>
+  res.status(404).json({
     message: 'Resource not found',
-    timestamp: new Date().toISOString()
-  });
-});
+    timestamp: new Date().toISOString(),
+  })
+);
 
-
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
   const isProd = process.env.NODE_ENV === 'production';
   res.status(err.status || 500).json({
     message: isProd ? 'Internal server error' : err.message,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
-
-(async () => {
+const startServer = async () => {
   try {
     await connectToMongo();
     const port = process.env.API_PORT || 3443;
     const isProd = process.env.NODE_ENV === 'production';
 
     if (isProd) {
-      const cert = {
-        key: fs.readFileSync('./certs/server.key'),
-        cert: fs.readFileSync('./certs/server.crt')
+      const certPath = './certs';
+      const sslOptions = {
+        key: fs.readFileSync(`${certPath}/server.key`),
+        cert: fs.readFileSync(`${certPath}/server.crt`),
       };
-      https.createServer(cert, app).listen(port, () => {
+      https.createServer(sslOptions, app).listen(port, () => {
         console.log(` SECURE API running on HTTPS port ${port}`);
       });
     } else {
@@ -137,4 +134,6 @@ app.use((err, req, res, next) => {
     console.error(' Failed to start server:', err.message);
     process.exit(1);
   }
-})();
+};
+
+startServer();
