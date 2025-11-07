@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  library_api:
+    build:
+      context: ./backend
+    container_name: library_api
+    restart: always
+    ports:
+      - "3447:3447"
+    environment:
+      NODE_ENV: production
+      API_PORT: 3447
+      CONN_STRING: mongodb+srv://chandler:Chandler04%24%24@insy.9qcptf8.mongodb.net/?retryWrites=true&w=majority&appName=INSY
+      JWT_SECRET: 158e5a8c9378ca1a7fffa21dabddd77fcabe74e3736df2a76e398c0617579c9586dfb9f3478934ffdb6f46196924e226841ef40b2807974c3bb262f0978a2968
+      JWT_EXPIRES_IN: 15m
+      REFRESH_TOKEN_SECRET: b3ff0c8fbbb7feccfbcd20b5adbfd7eb1920c10aab38397acfbe2c932e3cf482d3af986f943172b29dd1cd24dd36798cddacd0f66aec59721ac3272103a00307
+      REFRESH_TOKEN_EXPIRES_IN: 7d
+      CSRF_COOKIE_NAME: csrf_token
+      SALT_ROUNDS: 12
+      FRONTEND_ORIGIN: http://localhost:5173
+    networks:
+      - insy_net
+
+  library_frontend:
+    build:
+      context: ./frontend
+    container_name: library_frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - library_api
+    environment:
+      NODE_ENV: production
+    networks:
+      - insy_net
+
+
+networks:
+  insy_net:
+    driver: bridge
