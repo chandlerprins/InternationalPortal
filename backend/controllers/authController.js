@@ -6,35 +6,30 @@ const config = require('../config');
 const { redactSensitive } = require('../middlewares/sanitizeLogger');
 const { validatePasswordStrength, terminateSession } = require('../middlewares/authMiddleware');
 
-// Simple email-based 2FA codes storage (in production, use Redis)
 const emailCodes = new Map();
-const CODE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+const CODE_EXPIRY = 5 * 60 * 1000; 
 
 
-// Generate random 6-digit code for email 2FA
 const generateEmailCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send email code (simplified - just log it for now)
 const sendEmailCode = async (email, code) => {
-    // In production, integrate with email service (SendGrid, SES, etc.)
+
     console.log(`[EMAIL] 2FA Code for ${email}: ${code}`);
     console.log(`[EMAIL] Code expires in 5 minutes`);
     return true;
 };
 const loginAttempts = new Map();
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+const LOCKOUT_DURATION = 15 * 60 * 1000; 
 
-// Register new user with comprehensive security
 const register = async (req, res) => {
     try {
         const { fullName, email, accountNumber, password } = req.body;
         
         console.log(`[AUTH] Registration attempt for account: ${accountNumber}`);
         
-        // STRONG PASSWORD VALIDATION
         const passwordValidation = validatePasswordStrength(password);
         if (!passwordValidation.isValid) {
             return res.status(400).json({ 
@@ -43,7 +38,6 @@ const register = async (req, res) => {
             });
         }
         
-        // Check for existing users
         if (await User.findOne({ accountNumber })) {
             console.warn(`[SECURITY] Registration attempt with existing account number: ${accountNumber}`);
             return res.status(400).json({ message: 'Account number already exists' });
@@ -54,7 +48,6 @@ const register = async (req, res) => {
             return res.status(400).json({ message: 'Email already registered' });
         }
         
-        // ENHANCED HASHING AND SALTING (12 rounds for banking security)
         const saltRounds = config.saltRounds || 12;
         const passwordHash = await bcrypt.hash(password, saltRounds);
         
@@ -70,7 +63,7 @@ const register = async (req, res) => {
         console.log(`[AUTH] User registered successfully: ${accountNumber}`);
         res.status(201).json({ 
             message: 'Registration successful. Please log in.',
-            accountNumber: accountNumber // Safe to return
+            accountNumber: accountNumber 
         });
         
     } catch (err) {
@@ -79,7 +72,6 @@ const register = async (req, res) => {
     }
 };
 
-// Enhanced login with comprehensive security checks
 const login = async (req, res) => {
     try {
         const { accountNumber, password } = req.body;
@@ -87,11 +79,9 @@ const login = async (req, res) => {
         
         console.log(`[AUTH] Login attempt for account: ${accountNumber} from IP: ${clientIP}`);
         
-        // BRUTE FORCE PROTECTION
         const attemptKey = `${accountNumber}_${clientIP}`;
         const attempts = loginAttempts.get(attemptKey) || { count: 0, lockedUntil: null };
         
-        // Check if account is locked
         if (attempts.lockedUntil && Date.now() < attempts.lockedUntil) {
             const remainingTime = Math.ceil((attempts.lockedUntil - Date.now()) / 1000 / 60);
             console.warn(`[SECURITY] Blocked login attempt for locked account: ${accountNumber}`);
@@ -100,7 +90,6 @@ const login = async (req, res) => {
             });
         }
         
-        // Reset attempts if lockout period has expired
         if (attempts.lockedUntil && Date.now() >= attempts.lockedUntil) {
             loginAttempts.delete(attemptKey);
             attempts.count = 0;
@@ -110,7 +99,6 @@ const login = async (req, res) => {
         const user = await User.findOne({ accountNumber });
         
         if (!user) {
-            // Increment failed attempts even for non-existent accounts to prevent enumeration
             attempts.count++;
             if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
                 attempts.lockedUntil = Date.now() + LOCKOUT_DURATION;
@@ -133,12 +121,9 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
         
-        // Successful login - clear failed attempts
         loginAttempts.delete(attemptKey);
         
-        // TWO-FACTOR AUTHENTICATION CHECK
         if (user.is2FAEnabled) {
-            // Generate and send email code
             const emailCode = generateEmailCode();
             const codeKey = `${user._id}_${Date.now()}`;
             
@@ -150,7 +135,6 @@ const login = async (req, res) => {
                 expiresAt: Date.now() + CODE_EXPIRY
             });
             
-            // Send email (for now just log it)
             await sendEmailCode(user.email, emailCode);
             
             const tempToken = jwt.sign(
@@ -168,30 +152,27 @@ const login = async (req, res) => {
             });
         }
         
-        // Generate secure session tokens
         const tokenData = { uid: user._id, accountNumber: user.accountNumber, role: user.role };
         const accessToken = jwt.sign(tokenData, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
         const refreshToken = jwt.sign(tokenData, config.refreshSecret, { expiresIn: config.refreshExpiresIn });
         
-        // Set SECURE COOKIES (HttpOnly, Secure, SameSite)
         res.cookie('access_token', accessToken, {
-            httpOnly: true, // XSS Protection
-            sameSite: 'strict', // CSRF Protection
-            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-            maxAge: 15 * 60 * 1000 // 15 minutes for banking security
+            httpOnly: true, 
+            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production', 
+            maxAge: 15 * 60 * 1000 
         });
         
         res.cookie('refresh_token', refreshToken, {
             httpOnly: true,
             sameSite: 'strict',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000 
         });
-        
-        // CSRF TOKEN (Double-submit cookie pattern)
+
         const csrfToken = uuidv4();
         res.cookie(config.csrfCookieName, csrfToken, {
-            httpOnly: false, // need to read this for CSRF headers
+            httpOnly: false, 
             sameSite: 'strict',
             secure: process.env.NODE_ENV === 'production'
         });
@@ -200,7 +181,7 @@ const login = async (req, res) => {
         res.json({ 
             message: 'Login successful',
             user: user.toSafeJSON(),
-            csrfToken: csrfToken // need this for API calls
+            csrfToken: csrfToken 
         });
         
     } catch (err) {
@@ -209,7 +190,6 @@ const login = async (req, res) => {
     }
 };
 
-// Enhanced email-based 2FA verification
 const verify2FA = async (req, res) => {
     try {
         const { tempToken, code } = req.body;
@@ -231,25 +211,21 @@ const verify2FA = async (req, res) => {
             return res.status(401).json({ message: 'Invalid verification token' });
         }
         
-        // Find the stored code
         const storedData = emailCodes.get(payload.codeKey);
         if (!storedData) {
             return res.status(401).json({ message: 'Verification code not found or expired' });
         }
         
-        // Check if code has expired
         if (Date.now() > storedData.expiresAt) {
             emailCodes.delete(payload.codeKey);
             return res.status(401).json({ message: 'Verification code has expired' });
         }
         
-        // Verify the code
         if (storedData.code !== code.trim()) {
             console.warn(`[SECURITY] Failed email 2FA attempt for user: ${storedData.userId} from IP: ${clientIP}`);
             return res.status(401).json({ message: 'Invalid verification code' });
         }
         
-        // Clean up used code
         emailCodes.delete(payload.codeKey);
         
         const user = await User.findById(storedData.userId);
@@ -257,12 +233,10 @@ const verify2FA = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         
-        // Successful 2FA - issue full session tokens
         const tokenData = { uid: user._id, accountNumber: user.accountNumber, role: user.role };
         const accessToken = jwt.sign(tokenData, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
         const refreshToken = jwt.sign(tokenData, config.refreshSecret, { expiresIn: config.refreshExpiresIn });
         
-        // Set secure cookies
         res.cookie('access_token', accessToken, {
             httpOnly: true,
             sameSite: 'strict',
@@ -297,7 +271,6 @@ const verify2FA = async (req, res) => {
     }
 };
 
-// Email-based 2FA Setup (much simpler)
 const setup2FA = async (req, res) => {
     try {
         const user = await User.findById(req.user.uid);
@@ -322,7 +295,6 @@ const setup2FA = async (req, res) => {
     }
 };
 
-// Disable 2FA
 const disable2FA = async (req, res) => {
     try {
         const user = await User.findById(req.user.uid);
@@ -331,7 +303,7 @@ const disable2FA = async (req, res) => {
         }
         
         user.is2FAEnabled = false;
-        user.twoFASecret = undefined; // Remove any old secrets
+        user.twoFASecret = undefined; 
         await user.save();
         
         console.log(`[AUTH] 2FA disabled for user: ${user._id}`);
@@ -346,13 +318,11 @@ const disable2FA = async (req, res) => {
     }
 };
 
-// Secure logout with comprehensive session termination
 const logout = async (req, res) => {
     try {
         const userId = req.user?.uid;
         const clientIP = req.ip || req.connection.remoteAddress;
         
-        // Clear all session cookies securely
         terminateSession(res);
         
         console.log(`[AUTH] User logged out: ${userId || 'unknown'} from IP: ${clientIP}`);
@@ -367,7 +337,6 @@ const logout = async (req, res) => {
     }
 };
 
-// Cleanup old email codes periodically
 setInterval(() => {
     const now = Date.now();
     for (const [key, data] of emailCodes.entries()) {
@@ -376,12 +345,11 @@ setInterval(() => {
         }
     }
     
-    // Also cleanup old login attempts
     for (const [key, attempts] of loginAttempts.entries()) {
         if (attempts.lockedUntil && now >= attempts.lockedUntil) {
             loginAttempts.delete(key);
         }
     }
-}, 5 * 60 * 1000); // Clean up every 5 minutes
+}, 5 * 60 * 1000); 
 
 module.exports = { register, login, verify2FA, setup2FA, disable2FA, logout };
