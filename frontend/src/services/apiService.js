@@ -2,7 +2,7 @@ import axios from '../interfaces/axiosInstance.js';
 
 
 class ApiService {
-    // Generic request methods
+    
     async get(endpoint) {
         try {
             const response = await axios.get(endpoint);
@@ -39,7 +39,7 @@ class ApiService {
         }
     }
 
-    // Authentication endpoints
+    
     async register(userData) {
         return this.post('/auth/register', userData);
     }
@@ -72,7 +72,7 @@ class ApiService {
         return this.post('/auth/change-password', passwordData);
     }
 
-    // Dashboard endpoints
+    
     async getBalance() {
         return this.get('/payments/balance');
     }
@@ -81,7 +81,7 @@ class ApiService {
         return this.get('/payments/history');
     }
 
-    // Payment endpoints
+    
     async createPayment(paymentData) {
         return this.post('/payments', paymentData);
     }
@@ -102,7 +102,7 @@ class ApiService {
         return this.get(`/payments/${transactionId}/receipt`);
     }
 
-    // Profile endpoints
+    
     async updateProfile(profileData) {
         return this.put('/profile', profileData);
     }
@@ -115,7 +115,7 @@ class ApiService {
         return this.put('/profile/notifications', settings);
     }
 
-    // Document endpoints
+    
     async getDocuments() {
         return this.get('/profile/documents');
     }
@@ -134,7 +134,7 @@ class ApiService {
         return this.delete(`/profile/documents/${documentId}`);
     }
 
-    // Security endpoints
+    
     async getSecurityEvents() {
         return this.get('/security/events');
     }
@@ -147,7 +147,7 @@ class ApiService {
         return this.post(`/security/devices/${deviceId}/logout`);
     }
 
-    // Employee endpoints
+  
     async getEmployeeStats() {
         return this.get('/employee/stats');
     }
@@ -176,7 +176,7 @@ class ApiService {
         return this.post(`/employee/payments/${paymentId}/deny`);
     }
 
-    // Admin endpoints
+    
     async getEmployees() {
         return this.get('/employee/employees');
     }
@@ -189,7 +189,7 @@ class ApiService {
         return this.delete(`/employee/employees/${employeeId}`);
     }
 
-    // Health check endpoints
+    
     async healthCheck() {
         return this.get('/health');
     }
@@ -199,16 +199,16 @@ class ApiService {
     }
 }
 
-// Export singleton instance
+
 const apiServiceInstance = new ApiService();
 
-// Named export for import { apiService }
+
 export const apiService = apiServiceInstance;
 
-// Default export for import apiService
+
 export default apiServiceInstance;
 
-// Legacy book endpoints - deprecated but maintained for compatibility
+
 export const getAllBooks = () => console.warn('getAllBooks is deprecated - use payment endpoints');
 export const getBookById = (id) => console.warn('getBookById is deprecated - use payment endpoints');
 export const createBook = (bookData) => console.warn('createBook is deprecated - use payment endpoints');
