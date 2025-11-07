@@ -10,6 +10,8 @@ A secure, full-stack international payment portal built with modern web technolo
 | Mud-dath-thir Daniels | ST10301862 | Backend Development |
 | Dhruv Rathod | ST10109298 | Backend Development & Documentation |
 
+- [YouTube Video](https://youtu.be/y82YXM0PZ1M)
+
 ## 📋 Assignment Overview
 
 This project involves developing an internal international payment system for an international bank. The system allows customers to register and make international payments through the bank's online banking site. These transactions are then displayed on a secure payments portal accessible only by dedicated pre-registered bank staff.
