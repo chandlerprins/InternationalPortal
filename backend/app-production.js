@@ -12,7 +12,7 @@ const https = require('https');
 
 const { connectToMongo } = require('./services/dbService');
 
-// === Utility functions ===
+
 const createRateLimiter = (windowMs, max, message) => rateLimit({
   windowMs,
   max,
@@ -40,20 +40,20 @@ const logRequests = (req, res, next) => {
   next();
 };
 
-// === Express app setup ===
+
 const app = express();
 app.set('trust proxy', 1);
 
-// Logging
+
 app.use(morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms'));
 
-// Helmet security headers
+
 app.use(helmet());
 
-// Global rate limit
+
 app.use(createRateLimiter(15 * 60 * 1000, 100, 'Too many requests from this IP, please try again later.'));
 
-// CORS
+
 app.use(cors({
   origin: process.env.FRONTEND_ORIGIN || 'https://localhost:5173',
   credentials: true,
@@ -62,23 +62,22 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// Body parsers
+
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-// Input sanitization
+
 app.use(mongoSanitize({
   replaceWith: '_',
   onSanitize: ({ req, key }) => console.warn(`Sanitized input detected: ${key} from IP: ${req.ip}`)
 }));
 app.use(xss());
 
-// Apply headers & logging
 app.use(addSecurityHeaders);
 app.use(logRequests);
 
-// Health check
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -87,7 +86,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// === Routes ===
+
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const testRoutes = require('./routes/testRoutes');
@@ -96,7 +95,7 @@ app.use('/v1/auth', createRateLimiter(15 * 60 * 1000, 5, 'Too many authenticatio
 app.use('/v1/payments', createRateLimiter(10 * 60 * 1000, 10, 'Payment limit exceeded. Please wait before submitting more payments.'), paymentRoutes);
 app.use('/v1/test', testRoutes);
 
-// 404 handler
+
 app.use('*', (req, res) => {
   res.status(404).json({ 
     message: 'Resource not found',
@@ -104,7 +103,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Global error handler
+
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   const isProd = process.env.NODE_ENV === 'production';
@@ -114,7 +113,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// === Start server ===
+
 (async () => {
   try {
     await connectToMongo();
